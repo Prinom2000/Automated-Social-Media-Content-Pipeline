@@ -1,0 +1,1152 @@
+{
+  "name": "Auto-Schedule Facebook Posts with AI-Generated Images from Google Sheets",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=AIzaSyBnyeTBG82bPrkPbIgKoQMq4cgA7UQ7hlk",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"Create a stunning, professional Facebook social media graphic for the topic: \\\"{{$json.title}}\\\"\\n\\n🎨 DESIGN STYLE:\\n- Style: Modern graphic design with bold visual hierarchy\\n- Mood: {{$json.mood || 'Vibrant and engaging'}}\\n- Color Palette: Use rich, complementary colors that pop on Facebook feeds — deep gradients, bold accents, clean backgrounds\\n- Typography feel: Even without text, design should feel editorial and structured\\n- Visual theme: {{$json.theme || 'Professional and contemporary'}}\\n\\n📐 COMPOSITION & LAYOUT:\\n- Format: Square (1:1) or landscape (1.91:1) optimized for Facebook feed\\n- Use the rule of thirds for visual balance\\n- Strong focal point that immediately draws the eye\\n- Negative space used intentionally for breathing room\\n- Depth and dimension using shadows, gradients, or layered elements\\n\\n🖼️ VISUAL ELEMENTS:\\n- Include relevant symbolic imagery or abstract shapes that represent: {{$json.title}}\\n- Category/Industry: {{$json.category || 'General Business'}}\\n- Use: geometric patterns, flowing lines, or organic shapes as design elements\\n- Lighting: Cinematic or studio-quality lighting effect\\n- Textures: Subtle paper, metal, glass, or digital textures to add richness\\n\\n✨ QUALITY STANDARDS:\\n- Ultra high resolution, print-ready quality\\n- NO text overlays, NO watermarks, NO logos\\n- Clean edges, professional finish\\n- Pixel-perfect sharpness\\n- Colors vibrant enough to stand out in a busy social media feed\\n\\n🚫 AVOID:\\n- Cluttered or busy compositions\\n- Stock photo clichés\\n- Dull or muted color schemes\\n- Distorted proportions\"\n        }\n      ]\n    }\n  ],\n  \"generationConfig\": {\n    \"temperature\": 0.85,\n    \"topK\": 50,\n    \"topP\": 0.97,\n    \"maxOutputTokens\": 8192,\n    \"candidateCount\": 1\n  }\n}",
+        "options": {}
+      },
+      "id": "a4ad3176-ca1c-4c3e-8d76-faff9c565e7f",
+      "name": "Generate Image with Gemini",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1792,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "=name='{{ $('Get row(s) in sheet').item.json.title }}' and mimeType='application/vnd.google-apps.folder' and trashed=false",
+        "returnAll": true,
+        "filter": {},
+        "options": {}
+      },
+      "id": "1cd79bb4-ca4c-4527-b7b8-3995c4a829de",
+      "name": "Search for Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2608,
+        576
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "IV8QHURsmIkzCjdb",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $json.name }}",
+              "rightValue": true,
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "5f5783ea-1afb-40b0-b99a-622cf1c15cb0",
+      "name": "Check if Folder Exists",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2816,
+        576
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $('Get row(s) in sheet').item.json.title }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1kXESDJRUYByZ4egi5KgwedI9I7LZT48k",
+          "mode": "id"
+        },
+        "options": {
+          "folderColorRgb": "#DFF121"
+        }
+      },
+      "id": "ee81341d-2bdc-4397-884d-9f5507b97158",
+      "name": "Create Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3120,
+        944
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "IV8QHURsmIkzCjdb",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "={{ $('Get row(s) in sheet').item.json.title }}.png",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Merge').item.json.id || $('Merge').item.json.files?.[0]?.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "dc41be58-83c3-41b1-bffd-14ce94e2307b",
+      "name": "Upload Image to Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3616,
+        1056
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "IV8QHURsmIkzCjdb",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the input item\nconst item = $input.first();\n\n// Extract the full response\nconst response = item.json;\n\n// Get the candidates array\nconst candidates = response.candidates;\n\n// Extract the base64 image data\nconst parts = candidates[0].content.parts;\n\n// Find the part that contains image data\nconst imagePart = parts.find(part => part.inlineData);\nconst base64Data = imagePart.inlineData.data;\nconst mimeType = imagePart.inlineData.mimeType; // \"image/png\"\n\n// Also grab the text if you need it\nconst textPart = parts.find(part => part.text);\nconst textContent = textPart?.text;\n\nreturn [\n  {\n    json: {\n      base64Image: base64Data,\n      mimeType: mimeType,\n      text: textContent,\n    },\n    binary: {\n      data: {\n        data: base64Data,\n        mimeType: mimeType,\n        fileExtension: 'png',\n        fileName: 'generated_image.png',\n      }\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2032,
+        832
+      ],
+      "id": "58614665-6669-477c-8662-ac63b54537d0",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "base64Image",
+        "options": {
+          "fileName": "={{ $('Get row(s) in sheet').item.json.title }}.png"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        2240,
+        832
+      ],
+      "id": "1c57f19d-e951-46f4-bc46-f96c6152a70c",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3360,
+        1056
+      ],
+      "id": "1dc28ae8-e177-42b7-9e70-b9d4919893f0",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "name": "={{ $('Get row(s) in sheet').item.json.title }}.png",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "5895c6b0-e2bb-413d-963d-47929804c250",
+      "name": "Upload Image to Drive1",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3616,
+        656
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "IV8QHURsmIkzCjdb",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ Math.floor(new Date($json.schedule_time).getTime() / 1000 / 60) * 1 }}",
+        "format": "X",
+        "outputFieldName": "unix_time",
+        "options": {}
+      },
+      "id": "f1fb016d-723d-4cdc-a862-eb6c24a79c16",
+      "name": "Convert to Unix Timestamp1",
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        896,
+        832
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3136,
+        624
+      ],
+      "id": "47f95fbd-384c-4080-863b-8ce5aea484d5",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3952,
+        816
+      ],
+      "id": "421b0199-78ec-4708-b3f6-1043b019c41b",
+      "name": "Merge3"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1BrZ417dl4O-N0YlZ_ustSW3KhWdpLq3uR8a6wbPijDs",
+          "mode": "list",
+          "cachedResultName": "ContentQueue",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BrZ417dl4O-N0YlZ_ustSW3KhWdpLq3uR8a6wbPijDs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BrZ417dl4O-N0YlZ_ustSW3KhWdpLq3uR8a6wbPijDs/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "New photo uploaded!",
+            "row_number": "={{ $('Limit').item.json.row_number }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "gem",
+              "displayName": "gem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "schedule_time",
+              "displayName": "schedule_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4896,
+        784
+      ],
+      "id": "98065dd4-db68-4bfb-9c24-982975f60a4d",
+      "name": "Update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gHmZiO9OqgFSstgT",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1BrZ417dl4O-N0YlZ_ustSW3KhWdpLq3uR8a6wbPijDs",
+          "mode": "list",
+          "cachedResultName": "ContentQueue",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BrZ417dl4O-N0YlZ_ustSW3KhWdpLq3uR8a6wbPijDs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BrZ417dl4O-N0YlZ_ustSW3KhWdpLq3uR8a6wbPijDs/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "Can not upload",
+            "row_number": "={{ $('Limit').item.json.row_number }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "gem",
+              "displayName": "gem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "schedule_time",
+              "displayName": "schedule_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4896,
+        976
+      ],
+      "id": "0713edf5-9eb8-4c25-bfd2-952548641bc2",
+      "name": "Update row in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gHmZiO9OqgFSstgT",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "25cdb217-71ff-4b73-a25a-bea152362488",
+              "leftValue": "={{ $json.post_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4544,
+        912
+      ],
+      "id": "d57b4700-a0b5-4bb2-9ecb-adf4400a4339",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v19.0/{{114747874448186}}/photos",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer EAAWMEeCxlFYBQ3HfTZBfgvhuwZATLEY6zNTjlVYKMohrdbJWHdzivIogcrUy3h7Y61FQ9XAD4amSbLyR7uunUZCHJOtSQsWlZBiTO3OI9EZBtbKs3dzger3MRWHxkFe9kyRVGZAeDNerf0MUp7ZCRIjxXpw4i2UnseLD956c1ZCNbePFvuAOwwqVN200zCs2GNefnXosk7cZD"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "published",
+              "value": "true"
+            },
+            {
+              "name": "message",
+              "value": "={{ $('Get row(s) in sheet').item.json.title }}"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "source",
+              "inputDataFieldName": "={{ $binary.data }}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "id": "2a9a8b7b-446f-4a08-95d7-7086c09cc9aa",
+      "name": "Schedule Facebook Post2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4208,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -64,
+        848
+      ],
+      "id": "204e5a7c-a8c0-4203-a804-ad46e3a47f67",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1BrZ417dl4O-N0YlZ_ustSW3KhWdpLq3uR8a6wbPijDs",
+          "mode": "list",
+          "cachedResultName": "ContentQueue",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BrZ417dl4O-N0YlZ_ustSW3KhWdpLq3uR8a6wbPijDs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BrZ417dl4O-N0YlZ_ustSW3KhWdpLq3uR8a6wbPijDs/edit#gid=0"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "detectAutomatically"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        144,
+        848
+      ],
+      "id": "a2aa10c7-a155-4fb9-9a81-796ba4188edb",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gHmZiO9OqgFSstgT",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a2f2ebbe-a9a8-45d1-b632-be1002640540",
+              "leftValue": "={{ $json.unix_minutes }}",
+              "rightValue": "={{ $('Edit Fields').item.json.unix_time }}",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1552,
+        848
+      ],
+      "id": "95f30705-c727-4a25-9591-e395d79035d9",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "535710c3-a68c-443c-83ba-afd2f7e10725",
+              "name": "unix_time",
+              "value": "={{ $json.unix_time - 720}}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        832
+      ],
+      "id": "80723a00-86f3-49a9-8a58-d7f0635c046b",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    unix_minutes: Math.floor(Date.now() / 1000 / 60) - 360\n  }\n}];\n```\n\nOr better, add timezone to your sheet conversion. In your **Convert to Unix Timestamp** node, change the expression to:\n```\n{{ Math.floor(new Date($('Limit').item.json.schedule_time + ' UTC+6').getTime() / 1000 / 60) }}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        832
+      ],
+      "id": "6c70a260-9335-4664-b2a2-5165a1274246",
+      "name": "Current_time_unix_minutes"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3952,
+        1008
+      ],
+      "id": "160a837d-e0c7-403d-9db8-144f87425878",
+      "name": "Merge4"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        688,
+        832
+      ],
+      "id": "424c4f94-be27-4a64-8727-5c267e616381",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "Pending",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "b028b02a-bf24-4421-9d33-857f63861bdf",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "pending",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "d336ac28-31cf-407b-bb20-3da3f88215fe",
+      "name": "Check Status = Pending",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        384,
+        848
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1BrZ417dl4O-N0YlZ_ustSW3KhWdpLq3uR8a6wbPijDs",
+          "mode": "list",
+          "cachedResultName": "ContentQueue",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BrZ417dl4O-N0YlZ_ustSW3KhWdpLq3uR8a6wbPijDs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BrZ417dl4O-N0YlZ_ustSW3KhWdpLq3uR8a6wbPijDs/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "Time is not correct. Enter a valid future time.",
+            "row_number": "={{ $('Limit').item.json.row_number }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "gem",
+              "displayName": "gem",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "schedule_time",
+              "displayName": "schedule_time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1808,
+        1040
+      ],
+      "id": "0a8b0d3b-04de-4b1e-b3e9-8a44b8f6d5a8",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gHmZiO9OqgFSstgT",
+          "name": "Google Sheets account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Generate Image with Gemini": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search for Folder": {
+      "main": [
+        [
+          {
+            "node": "Check if Folder Exists",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Folder Exists": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Folder": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Upload Image to Drive": {
+      "main": [
+        [
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Search for Folder",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Upload Image to Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Image to Drive1": {
+      "main": [
+        [
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Convert to Unix Timestamp1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Upload Image to Drive1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Schedule Facebook Post2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update row in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Facebook Post2": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Check Status = Pending",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Current_time_unix_minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Generate Image with Gemini",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Current_time_unix_minutes": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge4": {
+      "main": [
+        [
+          {
+            "node": "Schedule Facebook Post2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Convert to Unix Timestamp1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Status = Pending": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "6ff1c2dd-4651-4dbd-9777-3872629cbd34",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b645d59449e9d4c814a4b7b249907f35dee4ef8a5927646a5d8e5d8c7fd9736f"
+  },
+  "id": "5bh8vvIH8kuEIOoE",
+  "tags": []
+}
