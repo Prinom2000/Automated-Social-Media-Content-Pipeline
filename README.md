@@ -1,6 +1,7 @@
 # Automated-Social-Media-Content-Pipeline
 
 **Brief description of workflow: **
+
 Schedule Trigger → pulls rows from a Google Sheet → checks for "Pending" status → limits records
 
 Data Prep → converts to Unix timestamp → edits fields → calculates time intervals → filters with IF node
